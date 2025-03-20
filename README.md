@@ -9,3 +9,6 @@ Routes
 GET Requests
 1. /users which return the top 5 users which maximum posts
 2. /posts 
+
+![Alt Text](https://raw.githubusercontent.com/aakashahpl/RA2211028010102/master/assests/sample_output.png)
+
