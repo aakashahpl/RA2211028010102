@@ -6,7 +6,7 @@ const router = Router();
 
 router.get('/users',topUsers);
 
-router.post('/posts',getTopLatestPosts);
+router.get('/posts',getTopLatestPosts);
 
 
 export default router;

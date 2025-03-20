@@ -1,6 +1,6 @@
 import express from "express";
 import bodyParser from "body-parser";
-import userRoute from "./route/user";
+import Route from "./route/user";
 import cors from "cors";
 import dotenv from "dotenv";
 dotenv.config();
@@ -19,7 +19,7 @@ app.use(express.json());
 app.get("/test",async(req,res)=>{
     res.send("API working");
 })
-app.use("/",userRoute);
+app.use("/",Route);
 
 const PORT = process.env.PORT||3000;
 app.listen(PORT,()=>{

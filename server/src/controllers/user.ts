@@ -37,7 +37,7 @@ const cache = {
   }
 };
 
-// Gets the top 5 usrs with the most posts
+// Gets the top 5 users with the most posts
 export const topUsers = async(req: Request, res: Response) => {
   try {
     const forceRefresh = req.query.refresh === 'true';
@@ -64,8 +64,15 @@ export const topUsers = async(req: Request, res: Response) => {
         'Authorization': `Bearer ${AUTH_TOKEN}`
       }
     });
+    
     const usersData = await usersResponse.json();
-    const users = usersData.users;
+    
+    // Check if we have the expected data structure
+    if (!usersData.data || typeof usersData.data !== 'object') {
+      throw new Error('Invalid users data structure received from API');
+    }
+    
+    const users = usersData.data;
     
     // Get posts for all users
     const userIds = Object.keys(users);
@@ -77,10 +84,10 @@ export const topUsers = async(req: Request, res: Response) => {
         }
       })
       .then(response => response.json())
-      .then(posts => ({
+      .then(postsData => ({
         id: userId,
         name: users[userId],
-        postCount: posts.length
+        postCount: postsData.data ? postsData.data.length : 0
       }))
     );
     
@@ -135,12 +142,21 @@ export const getTopLatestPosts = async(req: Request, res: Response) => {
     }
 
     // Get all posts
-    const postsResponse = await fetch(`${API_BASE_URL}/posts`, {
+    const postsResponse = await fetch(`${API_BASE_URL}/test/posts`, {
       headers: {
-        'Authorization': `Bearer ${AUTH_TOKEN}`
+        'Cache-Control': 'max-age=60',
+        // 'Authorization': `Bearer ${AUTH_TOKEN}`
       }
     });
-    const posts = await postsResponse.json();
+    
+    const postsData = await postsResponse.json();
+    
+    // Check if we have the expected data structure
+    if (!postsData.data || !Array.isArray(postsData.data)) {
+      throw new Error('Invalid posts data structure received from API');
+    }
+    
+    const posts = postsData.data;
     
     let resultPosts = [];
     
@@ -160,14 +176,16 @@ export const getTopLatestPosts = async(req: Request, res: Response) => {
     } else {
       // Get 5 newest posts
       resultPosts = posts
-        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+        .sort((a, b) => new Date(b.timestamp || Date.now()).getTime() - new Date(a.timestamp || Date.now()).getTime())
         .slice(0, 5);
     }
     
     return res.status(200).json({
       status: "success",
       message: `${type === 'popular' ? 'Popular' : 'Latest'} posts fetched successfully`,
-      data: resultPosts
+      data: resultPosts,
+      source: "api",
+      fetchedAt: new Date().toISOString()
     });
     
   } catch (error) {
